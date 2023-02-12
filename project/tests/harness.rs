@@ -37,11 +37,6 @@ async fn get_contract_instance() -> (MyContract, ContractId) {
 }
 
 #[tokio::test]
-async fn can_get_contract_id() {
-    let (_instance, _id) = get_contract_instance().await;
-}
-
-#[tokio::test]
 async fn hashing_u64() {
     let (instance, _id) = get_contract_instance().await;
 

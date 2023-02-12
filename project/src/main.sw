@@ -26,8 +26,7 @@ impl MyContract for Contract {
 
     fn hash_bytes_from_u64() -> b256 {
         let value: u64 = 10;
-        let u64_as_bytes = from_u64_for_bytes(value);
-        u64_as_bytes.sha256()
+        from_u64_for_bytes(value).sha256()
     }
 }
 
