@@ -1,6 +1,7 @@
 # SwayFromforBytes
 
-- confirm equivalence between: Rust hashing, Sway hashing, Sway hashing via Bytes for:
+- Implement `From<> for Bytes` methods for `u64` and `bool`
+- Confirm equivalence between: Rust hashing, Sway hashing, Sway hashing via Bytes for:
 
 1. u64 ✅
 2. bool
