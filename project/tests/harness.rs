@@ -45,14 +45,29 @@ async fn can_get_contract_id() {
 async fn hashing_u64() {
     let (instance, _id) = get_contract_instance().await;
 
-    let response = instance.methods().hash_u64().call().await.unwrap();
+    let hash_u64_response = instance.methods().hash_u64().call().await.unwrap();
 
     let value: u64 = 10;
     let value = value.to_be_bytes();
     let rust_hash = Hasher::hash(value);
 
-    dbg!(response.value.0);
-    dbg!(Bits256(rust_hash.into()).0);
+    let hash_bytes_from_u64_response = instance
+        .methods()
+        .hash_bytes_from_u64()
+        .call()
+        .await
+        .unwrap();
 
-    assert_eq!(response.value, Bits256(rust_hash.into()));
+    println!("hash_u64_response: \n{:?}", hash_u64_response.value.0);
+    println!("rust_hash: \n{:?}", Bits256(rust_hash.into()).0);
+    println!(
+        "hash_bytes_from_u64_response: \n{:?}",
+        hash_bytes_from_u64_response.value.0
+    );
+
+    assert_eq!(hash_u64_response.value, Bits256(rust_hash.into()));
+    assert_eq!(
+        hash_bytes_from_u64_response.value,
+        Bits256(rust_hash.into())
+    );
 }
