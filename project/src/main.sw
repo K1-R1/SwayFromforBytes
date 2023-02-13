@@ -104,3 +104,46 @@ impl MyContract for Contract {
         Bytes::from_identity(value).sha256()
     }
 }
+
+/*
+Check: if b256 is the value, then sha256(b256) == sha256(Address::from(b256)) == sha256(Identity::Address(Address::from(b256)))
+- Sway
+- rust SDK
+    - Check that hashing b256 in the way that value_2 does, is the same as via b256 Token
+*/
+abi info {
+    fn test_sway_1() -> b256;
+
+    fn test_sway_2() -> b256;
+
+    fn test_sway_3() -> b256;
+
+    fn test_sway_4() -> bool;
+}
+
+impl info for Contract {
+    fn test_sway_1() -> b256 {
+        let value = 0x0000000000000000000000000000000000000000000000000000000000011111;
+        sha256(value)
+    }
+
+    fn test_sway_2() -> b256 {
+        let value = 0x0000000000000000000000000000000000000000000000000000000000011111;
+        sha256(Address::from(value))
+    }
+
+    fn test_sway_3() -> b256 {
+        let value = 0x0000000000000000000000000000000000000000000000000000000000011111;
+        sha256(Identity::Address(Address::from(value)))
+    }
+
+    fn test_sway_4() -> bool {
+        let value = 0x0000000000000000000000000000000000000000000000000000000000011111;
+        let a = sha256(value);
+        let b = sha256(Address::from(value));
+        let c = sha256(Identity::Address(Address::from(value)));
+        require(a == b, "a != b");
+        require(b == c, "b != c");
+        true
+    }
+}
