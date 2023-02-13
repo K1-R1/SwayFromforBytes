@@ -66,3 +66,34 @@ async fn hashing_u64() {
         Bits256(rust_hash.into())
     );
 }
+
+#[tokio::test]
+async fn hashing_bool() {
+    let (instance, _id) = get_contract_instance().await;
+
+    let hash_bool_response = instance.methods().hash_bool().call().await.unwrap();
+
+    let value = true as u64;
+    let value = value.to_be_bytes();
+    let rust_hash = Hasher::hash(value);
+
+    let hash_bytes_from_bool_response = instance
+        .methods()
+        .hash_bytes_from_bool()
+        .call()
+        .await
+        .unwrap();
+
+    println!("hash_bool_response: \n{:?}", hash_bool_response.value.0);
+    println!("rust_hash: \n{:?}", Bits256(rust_hash.into()).0);
+    println!(
+        "hash_bytes_from_bool_response: \n{:?}",
+        hash_bytes_from_bool_response.value.0
+    );
+
+    assert_eq!(hash_bool_response.value, Bits256(rust_hash.into()));
+    assert_eq!(
+        hash_bytes_from_bool_response.value,
+        Bits256(rust_hash.into())
+    );
+}

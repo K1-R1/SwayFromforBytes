@@ -16,6 +16,10 @@ abi MyContract {
     fn hash_u64() -> b256;
 
     fn hash_bytes_from_u64() -> b256;
+
+    fn hash_bool() -> b256;
+
+    fn hash_bytes_from_bool() -> b256;
 }
 
 impl MyContract for Contract {
@@ -28,9 +32,34 @@ impl MyContract for Contract {
         let value: u64 = 10;
         from_u64_for_bytes(value).sha256()
     }
+
+    fn hash_bool() -> b256 {
+        let value = true;
+        sha256(value)
+    }
+
+    fn hash_bytes_from_bool() -> b256 {
+        let value = true;
+        from_bool_for_bytes(value).sha256()
+    }
 }
 
 fn from_u64_for_bytes(value: u64) -> Bytes {
+    // Artificially create bytes with capacity and len
+    let mut bytes = Bytes::with_capacity(8);
+    bytes.len = 8;
+
+    asm(buffer, ptr: value, dst: bytes.buf.ptr, len: 8) {
+        move buffer sp; // Make `buffer` point to the current top of the stack
+        cfei i8; // Grow stack by 1 word
+        sw buffer ptr i0; // Save value in register at `ptr` to memory at `buffer`
+        mcp dst buffer len; // Copy `len` bytes in memory starting from `buffer`, to `dst`
+        cfsi i8; // Shrink stack by 1 word
+    }
+
+    bytes
+}
+fn from_bool_for_bytes(value: bool) -> Bytes {
     // Artificially create bytes with capacity and len
     let mut bytes = Bytes::with_capacity(8);
     bytes.len = 8;
