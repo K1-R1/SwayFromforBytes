@@ -21,6 +21,15 @@ impl Bytes {
         bytes
     }
 
+    pub fn from_identity(i: Identity) -> Bytes {
+        // Artificially create bytes with capacity and len
+        let mut bytes = Bytes::with_capacity(32);
+        bytes.len = 32;
+        // Copy bytes from contract_id into the buffer of the target bytes
+        __addr_of(i).copy_bytes_to(bytes.buf.ptr, 32);
+        bytes
+    }
+
     pub fn from_copy_type<T>(value: T) -> Bytes {
     // Artificially create bytes with capacity and len
         let mut bytes = Bytes::with_capacity(8);
@@ -38,6 +47,14 @@ impl Bytes {
     }
 }
 
+// impl Bytes {
+//     pub fn from_identity(i: Identity) -> Bytes {
+//         match i {
+//             Identity::Address(address) => Bytes::from_b256(address.value),
+//             Identity::ContractId(contract_identifier) => Bytes::from_b256(contract_identifier.value),
+//         }
+//     }
+// }
 abi MyContract {
     fn hash_u64() -> b256;
 
@@ -46,6 +63,10 @@ abi MyContract {
     fn hash_bool() -> b256;
 
     fn hash_bytes_from_bool() -> b256;
+
+    fn hash_identity() -> b256;
+
+    fn hash_bytes_from_identity() -> b256;
 }
 
 impl MyContract for Contract {
@@ -67,5 +88,19 @@ impl MyContract for Contract {
     fn hash_bytes_from_bool() -> b256 {
         let value = true;
         Bytes::from_copy_type(value).sha256()
+    }
+
+    fn hash_identity() -> b256 {
+        let value = Identity::Address(Address {
+            value: 0x0000000000000000000000000000000000000000000000000000000000011111,
+        });
+        sha256(value)
+    }
+
+    fn hash_bytes_from_identity() -> b256 {
+        let value = Identity::Address(Address {
+            value: 0x0000000000000000000000000000000000000000000000000000000000011111,
+        });
+        Bytes::from_identity(value).sha256()
     }
 }
