@@ -118,3 +118,54 @@ async fn hashing_identity() {
         Bits256(rust_hash.into())
     );
 }
+
+#[tokio::test]
+async fn hashing_type1() {
+    let (instance, _id) = get_contract_instance().await;
+
+    let hash_type1_response = instance.methods().hash_type1().call().await.unwrap();
+
+    let value = Type1 {
+        boolean: true,
+        number: 12345,
+        identity: Identity::Address(Address::new(
+            Bits256::from_hex_str(
+                "0x0000000000000000000000000000000000000000000000000000000000011111",
+            )
+            .unwrap()
+            .0,
+        )),
+    };
+    let value_token = value.into_token();
+    let encoded_value_token = ABIEncoder::encode(&vec![value_token]).unwrap().resolve(0);
+    let rust_hash = Hasher::hash(encoded_value_token);
+
+    let hash_bytes_from_type1_response = instance
+        .methods()
+        .hash_bytes_from_type1()
+        .call()
+        .await
+        .unwrap();
+
+    // println!("hash_type1_response \n{:?}", hash_type1_response.value.0);
+    // println!("rust_hash \n{:?}", Bits256(rust_hash.into()).0);
+    // println!(
+    //     "hash_bytes_from_type1_response \n{:?}",
+    //     hash_bytes_from_type1_response.value.0
+    // );
+
+    assert_eq!(hash_type1_response.value, Bits256(rust_hash.into()));
+    assert_eq!(
+        hash_bytes_from_type1_response.value,
+        Bits256(rust_hash.into())
+    );
+}
+
+#[tokio::test]
+async fn test_from_trait() {
+    let (instance, _id) = get_contract_instance().await;
+
+    let test_from_trait_response = instance.methods().test_from_trait().call().await.unwrap();
+
+    assert_eq!(test_from_trait_response.value, true);
+}
