@@ -59,13 +59,6 @@ async fn hashing_u64() {
         .await
         .unwrap();
 
-    // println!("hash_u64_response: \n{:?}", hash_u64_response.value.0);
-    // println!("rust_hash: \n{:?}", Bits256(rust_hash.into()).0);
-    // println!(
-    //     "hash_bytes_from_u64_response: \n{:?}",
-    //     hash_bytes_from_u64_response.value.0
-    // );
-
     assert_eq!(hash_u64_response.value, Bits256(rust_hash.into()));
     assert_eq!(
         hash_bytes_from_u64_response.value,
@@ -90,13 +83,6 @@ async fn hashing_bool() {
         .await
         .unwrap();
 
-    // println!("hash_bool_response: \n{:?}", hash_bool_response.value.0);
-    // println!("rust_hash: \n{:?}", Bits256(rust_hash.into()).0);
-    // println!(
-    //     "hash_bytes_from_bool_response: \n{:?}",
-    //     hash_bytes_from_bool_response.value.0
-    // );
-
     assert_eq!(hash_bool_response.value, Bits256(rust_hash.into()));
     assert_eq!(
         hash_bytes_from_bool_response.value,
@@ -104,7 +90,6 @@ async fn hashing_bool() {
     );
 }
 
-#[ignore]
 #[tokio::test]
 async fn hashing_identity() {
     let (instance, _id) = get_contract_instance().await;
@@ -127,44 +112,9 @@ async fn hashing_identity() {
         .await
         .unwrap();
 
-    println!(
-        "hash_identity_response: \n{:?}",
-        hash_identity_response.value.0
-    );
-    println!("rust_hash: \n{:?}", Bits256(rust_hash.into()).0);
-    println!(
-        "hash_bytes_from_identity_response: \n{:?}",
-        hash_bytes_from_identity_response.value.0
-    );
-
-    let value_2 =
-        Bits256::from_hex_str("0x0000000000000000000000000000000000000000000000000000000000011111")
-            .unwrap()
-            .0;
-    let value_2_hash = Hasher::hash(value_2);
-    println!("value_2_hash: \n{:?}", Bits256(value_2_hash.into()).0);
-
     assert_eq!(hash_identity_response.value, Bits256(rust_hash.into()));
     assert_eq!(
         hash_bytes_from_identity_response.value,
         Bits256(rust_hash.into())
     );
-}
-
-#[tokio::test]
-async fn check_sway_hashing() {
-    let (instance, _id) = get_contract_instance().await;
-
-    let test_sway_1_response = instance.methods().test_sway_1().call().await.unwrap();
-    let test_sway_2_response = instance.methods().test_sway_2().call().await.unwrap();
-    let test_sway_3_response = instance.methods().test_sway_3().call().await.unwrap();
-    let test_sway_4_response = instance.methods().test_sway_4().call().await.unwrap();
-
-    println!("test_sway_1_response: \n{:?}", test_sway_1_response.value.0);
-    println!("test_sway_2_response: \n{:?}", test_sway_2_response.value.0);
-    println!("test_sway_3_response: \n{:?}", test_sway_3_response.value.0);
-    println!("test_sway_4_response: \n{:?}", test_sway_4_response.value);
-
-    assert_eq!(test_sway_1_response.value, test_sway_2_response.value);
-    assert_eq!(test_sway_2_response.value, test_sway_3_response.value);
 }
