@@ -80,6 +80,10 @@ impl Bytes {
     }
 }
 
+
+
+
+/* Commented out all Type 1 related code, as having multiple `impl From<> for Bytes` blocks causes error.
 struct Type1 {
     boolean: bool,
     number: u64,
@@ -107,7 +111,37 @@ impl From<Type1> for Bytes {
         value
     }
 }
+*/
+struct Type2 {
+    boolean: bool,
+    number: u64,
+    identity: Identity,
+    bytes: Bytes,
+}
 
+impl From<Type2> for Bytes {
+    fn from(t: Type2) -> Bytes {
+        let mut bytes = Bytes::new();
+        bytes.append(Bytes::from_copy_type(t.boolean));
+        bytes.append(Bytes::from_copy_type(t.number));
+        bytes.append(Bytes::from_identity(t.identity));
+        bytes.append(t.bytes);
+        bytes
+    }
+
+    fn into(self) -> Type2 { // Needed by the `From` trait. Could be lossy!
+        let mut value = Type2 {
+            boolean: false,
+            number: 0,
+            identity: Identity::Address(Address::from(0x0000000000000000000000000000000000000000000000000000000000000000)),
+            bytes: Bytes::from_copy_type(0),
+        };
+        let ptr = __addr_of(value);
+        self.buf.ptr().copy_to::<Type2>(ptr, 1);
+
+        value
+    }
+}
 abi MyContract {
     fn hash_u64() -> b256;
 
@@ -121,6 +155,10 @@ abi MyContract {
 
     fn hash_bytes_from_identity() -> b256;
 
+
+
+
+    /*
     fn hash_type1() -> b256;
 
     fn hash_bytes_from_type1() -> b256;
@@ -128,6 +166,10 @@ abi MyContract {
     fn expose_type1() -> Type1;
 
     fn test_from_trait() -> bool;
+    */
+    fn hash_bytes_from_type2() -> b256;
+
+    fn test_from_type2_trait() -> bool;
 }
 
 impl MyContract for Contract {
@@ -165,6 +207,10 @@ impl MyContract for Contract {
         Bytes::from_identity(value).sha256()
     }
 
+
+
+
+    /*
     fn hash_type1() -> b256 {
         let value = Type1 {
             boolean: true,
@@ -202,6 +248,36 @@ impl MyContract for Contract {
         if t1.boolean == t2.boolean
             && t1.number == t2.number
             && t1.identity == t2.identity
+        {
+            true
+        } else {
+            false
+        }
+    }
+    */
+    fn hash_bytes_from_type2() -> b256 {
+        let value = Type2 {
+            boolean: true,
+            number: 12345,
+            identity: Identity::Address(Address::from(0x0000000000000000000000000000000000000000000000000000000000011111)),
+            bytes: Bytes::from_copy_type(6789),
+        };
+        Bytes::from(value).sha256()
+    }
+
+    fn test_from_type2_trait() -> bool {
+        let t1 = Type2 {
+            boolean: true,
+            number: 12345,
+            identity: Identity::Address(Address::from(0x0000000000000000000000000000000000000000000000000000000000011111)),
+            bytes: Bytes::from_copy_type(6789),
+        };
+        let bytes = Bytes::from(t1);
+        let t2: Type2 = bytes.into();
+        if t1.boolean == t2.boolean
+            && t1.number == t2.number
+            && t1.identity == t2.identity
+            && t1.bytes == t2.bytes
         {
             true
         } else {

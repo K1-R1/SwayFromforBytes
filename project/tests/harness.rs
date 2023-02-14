@@ -119,6 +119,7 @@ async fn hashing_identity() {
     );
 }
 
+/*
 #[tokio::test]
 async fn hashing_type1() {
     let (instance, _id) = get_contract_instance().await;
@@ -168,4 +169,43 @@ async fn test_from_trait() {
     let test_from_trait_response = instance.methods().test_from_trait().call().await.unwrap();
 
     assert_eq!(test_from_trait_response.value, true);
+}
+*/
+
+#[tokio::test]
+async fn hashing_type2() {
+    let (instance, _id) = get_contract_instance().await;
+
+    let hash_bytes_from_type2_response = instance
+        .methods()
+        .hash_bytes_from_type2()
+        .call()
+        .await
+        .unwrap();
+
+    let mut encoded_boolean = (true as u64).to_be_bytes().to_vec();
+    let mut encoded_number = 12345u64.to_be_bytes().to_vec();
+
+    let identity_token = Identity::Address(Address::new(
+        Bits256::from_hex_str("0x0000000000000000000000000000000000000000000000000000000000011111")
+            .unwrap()
+            .0,
+    ))
+    .into_token();
+    let mut encoded_identity = ABIEncoder::encode(&vec![identity_token])
+        .unwrap()
+        .resolve(0);
+
+    let mut bytes = 6789u64.to_be_bytes().to_vec();
+
+    encoded_boolean.append(&mut encoded_number);
+    encoded_boolean.append(&mut encoded_identity);
+    encoded_boolean.append(&mut bytes);
+
+    let rust_hash = Hasher::hash(encoded_boolean);
+
+    assert_eq!(
+        hash_bytes_from_type2_response.value,
+        Bits256(rust_hash.into())
+    );
 }

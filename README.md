@@ -11,4 +11,5 @@
 - Confirm equivalence between: Rust hashing, Sway hashing, Sway hashing via Bytes for:
 
 1. struct with fields of the above types✅
-1. struct with fields of the above types + Bytes
+2. struct with fields of the above types + Bytes✅
+3. struct from point 2. but all fields optional
