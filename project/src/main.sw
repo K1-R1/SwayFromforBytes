@@ -1,9 +1,12 @@
 contract;
 
-use std::{alloc::realloc_bytes, bytes::Bytes, hash::sha256};
+use std::{alloc::realloc_bytes, bytes::Bytes, constants::ZERO_B256, hash::sha256};
+
+const DEFAULT_TEST_B256 = 0x0000000000000000000000000000000000000000000000000000000000011111;
 
 impl Bytes {
-    pub fn sha256(self) -> b256 { // not in this forc version
+    ////////////////////////////////////// not in this forc version //////////////////////////////////////////////////////
+    pub fn sha256(self) -> b256 {
         let mut result_buffer = b256::min();
         asm(hash: result_buffer, ptr: self.buf.ptr, bytes: self.len) {
             s256 hash ptr bytes;
@@ -11,7 +14,7 @@ impl Bytes {
         }
     }
 
-    pub fn append(ref mut self, ref other: self) { // not in this forc version
+    pub fn append(ref mut self, ref other: self) {
         if other.len == 0 {
             return
         };
@@ -43,26 +46,7 @@ impl Bytes {
         // clear `other`
         other.clear();
     }
-
-    pub fn from_b256(b: b256) -> Bytes { // not in this forc version
-        // Artificially create bytes with capacity and len
-        let mut bytes = Bytes::with_capacity(32);
-        bytes.len = 32;
-        // Copy bytes from contract_id into the buffer of the target bytes
-        __addr_of(b).copy_bytes_to(bytes.buf.ptr, 32);
-
-        bytes
-    }
-
-    pub fn from_identity(i: Identity) -> Bytes {
-        // Artificially create bytes with capacity and len
-        let mut bytes = Bytes::with_capacity(40);
-        bytes.len = 40;
-        // Copy bytes from contract_id into the buffer of the target bytes
-        __addr_of(i).copy_bytes_to(bytes.buf.ptr, 40);
-        bytes
-    }
-
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     pub fn from_copy_type<T>(value: T) -> Bytes {
     // Artificially create bytes with capacity and len
         let mut bytes = Bytes::with_capacity(8);
@@ -78,12 +62,31 @@ impl Bytes {
 
         bytes
     }
+
+    pub fn from_reference_type<T>(t: T) -> Bytes {
+        // Artificially create bytes with capacity and len
+        let size = __size_of::<T>();
+        let mut bytes = Bytes::with_capacity(size);
+        bytes.len = size;
+        // Copy bytes from contract_id into the buffer of the target bytes
+        __addr_of(t).copy_bytes_to(bytes.buf.ptr, size);
+        bytes
+    }
+
+    pub fn from_identity(i: Identity) -> Bytes { // More gas efficient form of `from_reference_type`, as `size` can be hardcoded.
+        // Artificially create bytes with capacity and len
+        let mut bytes = Bytes::with_capacity(40);
+        bytes.len = 40;
+        // Copy bytes from contract_id into the buffer of the target bytes
+        __addr_of(i).copy_bytes_to(bytes.buf.ptr, 40);
+        bytes
+    }
 }
 
 
 
 
-/* Commented out all Type 1 related code, as having multiple `impl From<> for Bytes` blocks causes error.
+/* Commented out all Type 1 related code, as having multiple `impl From<> for Bytes` blocks currently causes error. This code has passed it's tests.
 struct Type1 {
     boolean: bool,
     number: u64,
@@ -103,7 +106,7 @@ impl From<Type1> for Bytes {
         let mut value = Type1 {
             boolean: false,
             number: 0,
-            identity: Identity::Address(Address::from(0x0000000000000000000000000000000000000000000000000000000000000000)),
+            identity: Identity::Address(Address::from(ZERO_B256)),
         };
         let ptr = __addr_of(value);
         self.buf.ptr().copy_to::<Type1>(ptr, 1);
@@ -133,7 +136,7 @@ impl From<Type2> for Bytes {
         let mut value = Type2 {
             boolean: false,
             number: 0,
-            identity: Identity::Address(Address::from(0x0000000000000000000000000000000000000000000000000000000000000000)),
+            identity: Identity::Address(Address::from(ZERO_B256)),
             bytes: Bytes::from_copy_type(0),
         };
         let ptr = __addr_of(value);
@@ -142,6 +145,7 @@ impl From<Type2> for Bytes {
         value
     }
 }
+
 abi MyContract {
     fn hash_u64() -> b256;
 
@@ -170,6 +174,14 @@ abi MyContract {
     fn hash_bytes_from_type2() -> b256;
 
     fn test_from_type2_trait() -> bool;
+
+    fn hash_option_some() -> (b256, b256);
+
+    fn hash_option_none() -> (b256, b256);
+
+    fn hash_bytes_from_option_some() -> (b256, b256);
+
+    fn hash_bytes_from_option_none() -> (b256, b256);
 }
 
 impl MyContract for Contract {
@@ -195,16 +207,16 @@ impl MyContract for Contract {
 
     fn hash_identity() -> b256 {
         let value = Identity::Address(Address {
-            value: 0x0000000000000000000000000000000000000000000000000000000000011111,
+            value: DEFAULT_TEST_B256,
         });
         sha256(value)
     }
 
     fn hash_bytes_from_identity() -> b256 {
         let value = Identity::Address(Address {
-            value: 0x0000000000000000000000000000000000000000000000000000000000011111,
+            value: DEFAULT_TEST_B256,
         });
-        Bytes::from_identity(value).sha256()
+        Bytes::from_reference_type(value).sha256()
     }
 
 
@@ -215,7 +227,7 @@ impl MyContract for Contract {
         let value = Type1 {
             boolean: true,
             number: 12345,
-            identity: Identity::Address(Address::from(0x0000000000000000000000000000000000000000000000000000000000011111)),
+            identity: Identity::Address(Address::from(DEFAULT_TEST_B256)),
         };
         sha256(value)
     }
@@ -224,7 +236,7 @@ impl MyContract for Contract {
         let value = Type1 {
             boolean: true,
             number: 12345,
-            identity: Identity::Address(Address::from(0x0000000000000000000000000000000000000000000000000000000000011111)),
+            identity: Identity::Address(Address::from(DEFAULT_TEST_B256)),
         };
         Bytes::from(value).sha256()
     }
@@ -233,7 +245,7 @@ impl MyContract for Contract {
         Type1 {
             boolean: true,
             number: 12345,
-            identity: Identity::Address(Address::from(0x0000000000000000000000000000000000000000000000000000000000011111)),
+            identity: Identity::Address(Address::from(DEFAULT_TEST_B256)),
         }
     }
 
@@ -241,7 +253,7 @@ impl MyContract for Contract {
         let t1 = Type1 {
             boolean: true,
             number: 12345,
-            identity: Identity::Address(Address::from(0x0000000000000000000000000000000000000000000000000000000000011111)),
+            identity: Identity::Address(Address::from(DEFAULT_TEST_B256)),
         };
         let bytes = Bytes::from(t1);
         let t2: Type1 = bytes.into();
@@ -259,7 +271,7 @@ impl MyContract for Contract {
         let value = Type2 {
             boolean: true,
             number: 12345,
-            identity: Identity::Address(Address::from(0x0000000000000000000000000000000000000000000000000000000000011111)),
+            identity: Identity::Address(Address::from(DEFAULT_TEST_B256)),
             bytes: Bytes::from_copy_type(6789),
         };
         Bytes::from(value).sha256()
@@ -269,7 +281,7 @@ impl MyContract for Contract {
         let t1 = Type2 {
             boolean: true,
             number: 12345,
-            identity: Identity::Address(Address::from(0x0000000000000000000000000000000000000000000000000000000000011111)),
+            identity: Identity::Address(Address::from(DEFAULT_TEST_B256)),
             bytes: Bytes::from_copy_type(6789),
         };
         let bytes = Bytes::from(t1);
@@ -283,5 +295,35 @@ impl MyContract for Contract {
         } else {
             false
         }
+    }
+
+    fn hash_option_some() -> (b256, b256) {
+        let value1 = Option::Some(12345);
+        let value2 = Option::Some(Identity::Address(Address::from(DEFAULT_TEST_B256)));
+        (sha256(value1), sha256(value2))
+    }
+
+    fn hash_option_none() -> (b256, b256) {
+        let value1: Option<u64> = Option::None;
+        let value2: Option<Identity> = Option::None;
+        (sha256(value1), sha256(value2))
+    }
+
+    fn hash_bytes_from_option_some() -> (b256, b256) {
+        let value1 = Option::Some(12345);
+        let value2 = Option::Some(Identity::Address(Address::from(DEFAULT_TEST_B256)));
+        (
+            Bytes::from_reference_type(value1).sha256(),
+            Bytes::from_reference_type(value2).sha256(),
+        )
+    }
+
+    fn hash_bytes_from_option_none() -> (b256, b256) {
+        let value1: Option<u64> = Option::None;
+        let value2: Option<Identity> = Option::None;
+        (
+            Bytes::from_reference_type(value1).sha256(),
+            Bytes::from_reference_type(value2).sha256(),
+        )
     }
 }
