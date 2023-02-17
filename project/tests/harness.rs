@@ -264,7 +264,7 @@ async fn hashing_option() {
 }
 
 #[tokio::test]
-async fn hashing_option_bytes() {
+async fn hashing_option_some_bytes() {
     let (instance, _id) = get_contract_instance().await;
 
     let hash_bytes_from_option_some_bytes_response = instance
@@ -284,20 +284,26 @@ async fn hashing_option_bytes() {
     enum_tag.append(&mut encoded_identity);
     let rush_hash = Hasher::hash(enum_tag);
 
-    println!(
-        "hash_bytes_from_option_some_bytes_response: \n{:?}",
-        hash_bytes_from_option_some_bytes_response.value
-    );
-    println!("rush_hash: \n{:?}", Bits256(rush_hash.into()));
-
     let hash_bytes_from_option_some_response = instance
         .methods()
         .hash_bytes_from_option_some()
         .call()
         .await
         .unwrap();
-    println!(
-        "hash_bytes_from_option_some_response: \n{:?}",
+
+    assert_eq!(
+        // Expected rust hash == hash(bytes(Identity)) == hash(identity)
+        hash_bytes_from_option_some_bytes_response.value,
+        Bits256(rush_hash.into())
+    );
+    assert_eq!(
+        Bits256(rush_hash.into()),
         hash_bytes_from_option_some_response.value.1
     );
+}
+
+#[ignore = "Can't test without SDK support for Bytes"]
+#[tokio::test]
+async fn hashing_option_none_bytes() {
+    // Can't test without SDK support for Bytes
 }
