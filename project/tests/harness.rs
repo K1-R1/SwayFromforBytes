@@ -262,3 +262,50 @@ async fn hashing_option() {
     assert_eq!(hash_option_none_response.value, rust_none_hashes);
     assert_eq!(rust_none_hashes, hash_bytes_from_option_none_response.value);
 }
+
+#[tokio::test]
+async fn hashing_option_bytes() {
+    let (instance, _id) = get_contract_instance().await;
+
+    let hash_bytes_from_option_some_bytes_response = instance
+        .methods()
+        .hash_bytes_from_option_some_bytes()
+        .call()
+        .await
+        .unwrap();
+
+    let identity = Identity::Address(Address::new(
+        Bits256::from_hex_str(DEFAULT_TEST_B256).unwrap().0,
+    ));
+    let mut encoded_identity = ABIEncoder::encode(&vec![identity.into_token()])
+        .unwrap()
+        .resolve(0);
+    let value = Option::Some(encoded_identity.clone());
+
+    let encoded_tokenized_value = ABIEncoder::encode(&vec![value.into_token()])
+        .unwrap()
+        .resolve(0);
+    let rush_hash_1 = Hasher::hash(encoded_tokenized_value);
+
+    let mut enum_tag = 1u64.to_be_bytes().to_vec();
+    enum_tag.append(&mut encoded_identity);
+    let rush_hash_2 = Hasher::hash(enum_tag);
+
+    println!(
+        "hash_bytes_from_option_some_bytes_response: \n{:?}",
+        hash_bytes_from_option_some_bytes_response.value
+    );
+    println!("rush_hash_1: \n{:?}", Bits256(rush_hash_1.into()));
+    println!("rush_hash_2: \n{:?}", Bits256(rush_hash_2.into()));
+
+    let hash_bytes_from_option_some_response = instance
+        .methods()
+        .hash_bytes_from_option_some()
+        .call()
+        .await
+        .unwrap();
+    println!(
+        "hash_bytes_from_option_some_response: \n{:?}",
+        hash_bytes_from_option_some_response.value.1
+    );
+}

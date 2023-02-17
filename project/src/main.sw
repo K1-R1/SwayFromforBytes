@@ -182,6 +182,8 @@ abi MyContract {
     fn hash_bytes_from_option_some() -> (b256, b256);
 
     fn hash_bytes_from_option_none() -> (b256, b256);
+
+    fn hash_bytes_from_option_some_bytes() -> b256;
 }
 
 impl MyContract for Contract {
@@ -325,5 +327,10 @@ impl MyContract for Contract {
             Bytes::from_reference_type(value1).sha256(),
             Bytes::from_reference_type(value2).sha256(),
         )
+    }
+
+    fn hash_bytes_from_option_some_bytes() -> b256 {
+        let value = Option::Some(Bytes::from_reference_type(Identity::Address(Address::from(DEFAULT_TEST_B256))));
+        Bytes::from_reference_type(value).sha256()
     }
 }

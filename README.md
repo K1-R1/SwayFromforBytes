@@ -15,4 +15,4 @@ Using forc 0.33.1
 
 1. struct with fields of the above types✅
 2. struct with fields of the above types + Bytes✅
-3. struct from point 2. but all fields optional
+3. Option< Bytes >
