@@ -280,23 +280,15 @@ async fn hashing_option_bytes() {
     let mut encoded_identity = ABIEncoder::encode(&vec![identity.into_token()])
         .unwrap()
         .resolve(0);
-    let value = Option::Some(encoded_identity.clone());
-
-    let encoded_tokenized_value = ABIEncoder::encode(&vec![value.into_token()])
-        .unwrap()
-        .resolve(0);
-    let rush_hash_1 = Hasher::hash(encoded_tokenized_value);
-
     let mut enum_tag = 1u64.to_be_bytes().to_vec();
     enum_tag.append(&mut encoded_identity);
-    let rush_hash_2 = Hasher::hash(enum_tag);
+    let rush_hash = Hasher::hash(enum_tag);
 
     println!(
         "hash_bytes_from_option_some_bytes_response: \n{:?}",
         hash_bytes_from_option_some_bytes_response.value
     );
-    println!("rush_hash_1: \n{:?}", Bits256(rush_hash_1.into()));
-    println!("rush_hash_2: \n{:?}", Bits256(rush_hash_2.into()));
+    println!("rush_hash: \n{:?}", Bits256(rush_hash.into()));
 
     let hash_bytes_from_option_some_response = instance
         .methods()

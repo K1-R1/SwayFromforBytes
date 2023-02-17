@@ -63,7 +63,7 @@ impl Bytes {
         bytes
     }
 
-    pub fn from_reference_type<T>(t: T) -> Bytes {
+    pub fn from_reference_type<T>(t: T) -> Bytes { // NOTE: Does not work correctly for Bytes from Option::Some(Bytes)
         // Artificially create bytes with capacity and len
         let size = __size_of::<T>();
         let mut bytes = Bytes::with_capacity(size);
@@ -331,6 +331,22 @@ impl MyContract for Contract {
 
     fn hash_bytes_from_option_some_bytes() -> b256 {
         let value = Option::Some(Bytes::from_reference_type(Identity::Address(Address::from(DEFAULT_TEST_B256))));
-        Bytes::from_reference_type(value).sha256()
+        option_bytes_to_bytes(value).sha256()
+    }
+}
+
+fn option_bytes_to_bytes(o: Option<Bytes>) -> Bytes {
+    let size = __size_of::<Option<Bytes>>();
+    match o {
+        Option::None => {
+            let mut option_bytes = Bytes::from_copy_type(0u64);
+            option_bytes.append(Bytes::with_capacity(size - 8));
+            option_bytes
+        },
+        Option::Some(bytes) => {
+            let mut option_bytes = Bytes::from_copy_type(1u64);
+            option_bytes.append(bytes);
+            option_bytes
+        }
     }
 }
