@@ -346,6 +346,7 @@ fn option_bytes_to_bytes(o: Option<Bytes>) -> Bytes {
     match o {
         Option::None => { 
             // __size_of_val(o) == 32 bytes
+            // 8 bytes for the enum tag (0u64) + 24 bytes for the Bytes type ([0u8; 32])
             Bytes::from_reference_type(ZERO_B256)
         },
         Option::Some(bytes) => {
