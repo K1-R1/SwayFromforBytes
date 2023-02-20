@@ -313,6 +313,7 @@ async fn hashing_option_none_bytes() {
         .await
         .unwrap();
 
+    // Option<Bytes>::None => 8 bytes for the enum tag (0u64) + 24 bytes for the Bytes type ([0u8; 24])
     let value = [0u8; 32];
     let rust_hash = Hasher::hash(value);
 
