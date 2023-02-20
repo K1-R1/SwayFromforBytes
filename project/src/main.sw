@@ -336,19 +336,17 @@ impl MyContract for Contract {
         option_bytes_to_bytes(value).sha256()
     }
 
-    fn hash_bytes_from_option_none_bytes() -> b256 { // Untested, as the RustSDK does not yet support Bytes
+    fn hash_bytes_from_option_none_bytes() -> b256 {
         let value: Option<Bytes> = Option::None;
         option_bytes_to_bytes(value).sha256()
     }
 }
 
 fn option_bytes_to_bytes(o: Option<Bytes>) -> Bytes {
-    let size = __size_of::<Option<Bytes>>();
     match o {
-        Option::None => { // Untested, as the RustSDK does not yet support Bytes
-            let mut option_bytes = Bytes::from_copy_type(0u64);
-            option_bytes.append(Bytes::with_capacity(size - 8));
-            option_bytes
+        Option::None => { 
+            // __size_of_val(o) == 32 bytes
+            Bytes::from_reference_type(ZERO_B256)
         },
         Option::Some(bytes) => {
             let mut option_bytes = Bytes::from_copy_type(1u64);
